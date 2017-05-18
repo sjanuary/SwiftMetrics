@@ -1,3 +1,19 @@
+/**
+* Copyright IBM Corporation 2017
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+**/
+
 import Foundation
 import Dispatch
 import LoggerAPI
@@ -12,6 +28,12 @@ import SwiftyJSON
 fileprivate struct HttpStats {
   fileprivate var count: Double = 0
   fileprivate var duration: Double = 0
+  fileprivate var average: Double = 0
+}
+
+fileprivate struct LatencyStats {
+  fileprivate var count: Double = 0
+  fileprivate var sum: Double = 0
   fileprivate var average: Double = 0
 }
 
@@ -36,6 +58,7 @@ fileprivate struct ThroughputStats {
 
 fileprivate struct Metrics {
   //holds the metrics we use for updates and used to create the metrics we send to the auto-scaling service
+  fileprivate var latencyStats: LatencyStats = LatencyStats()
   fileprivate var httpStats: HttpStats = HttpStats()
   fileprivate var memoryStats: MemoryStats = MemoryStats()
   fileprivate var cpuStats: CPUStats = CPUStats()
@@ -44,13 +67,14 @@ fileprivate struct Metrics {
 
 fileprivate struct AverageMetrics {
   //Stores averages of metrics to send to the auto-scaling service
+  fileprivate var dispatchQueueLatency: Double = 0
   fileprivate var responseTime: Double = 0
   fileprivate var memory: Float = 0
   fileprivate var cpu: Float = 0
   fileprivate var throughput : Double = 0
 }
 
-public class AutoScalar {
+public class SwiftMetricsBluemix {
 
   var reportInterval: Int = 30
   // the number of s to wait between report thread runs
@@ -109,27 +133,6 @@ public class AutoScalar {
       return false
     }
 
-    //// @Toby, @Matt - We are wondering if you ran into issues using the convenience
-    //// method (see above) for getting services that match a given type (label).
-    //// If you did, let us know and we can look into it. If there are not any issues,
-    //// can you guys use the logic above instead of the code commented out below?
-    ////
-    // var scalingServ: Service? = nil
-    // let services = configMgr.getServices()
-    // for (_, service) in services {
-    //    if service.label.hasPrefix(autoScalingServiceLabel) {
-    //      Log.debug("[Auto-Scaling Agent] Found Auto-Scaling service: \(service.name)")
-    //      scalingServ = service
-    //      break
-    //    }
-    // }
-    //
-    // guard let serv = scalingServ, let autoScalingService = AutoScalingService(withService: serv) else {
-    //   Log.error("[Auto-Scaling Agent] Could not create instance of Auto-Scaling service.")
-    //   return false
-    // }
-    ////
-
     Log.debug("[Auto-Scaling Agent] Found Auto-Scaling service: \(autoScalingService.name)")
 
     // Assign unwrapped values
@@ -175,7 +178,7 @@ public class AutoScalar {
   }
 
   public convenience init(swiftMetricsInstance: SwiftMetrics) {
-    self.init(metricsToEnable: ["CPU", "Memory", "Throughput", "ResponseTime"], swiftMetricsInstance: swiftMetricsInstance)
+    self.init(metricsToEnable: ["CPU", "Memory", "Throughput", "ResponseTime", "DispatchQueueLatency"], swiftMetricsInstance: swiftMetricsInstance)
   }
 
   private func setMonitors(monitor: SwiftMonitor) {
@@ -195,6 +198,10 @@ public class AutoScalar {
       Log.debug("[Auto-scaling Agent] Http response time received \(http.duration) ")
       self.metrics.throughputStats.requestCount += 1;
     })
+    monitor.on({(latency: LatencyData) -> () in
+      self.metrics.latencyStats.count += 1
+      self.metrics.latencyStats.sum += latency.duration
+    })
   }
 
   private func startReport() {
@@ -210,7 +217,12 @@ public class AutoScalar {
   }
 
   private func calculateAverageMetrics() ->  AverageMetrics {
-    metrics.httpStats.average = (metrics.httpStats.duration > 0 && metrics.httpStats.count > 0) ? (metrics.httpStats.duration / metrics.httpStats.count) : 0.0
+
+    metrics.latencyStats.average = (metrics.latencyStats.sum > 0 && metrics.latencyStats.count > 0) ? (metrics.latencyStats.sum / metrics.latencyStats.count) : 0.0
+    metrics.latencyStats.count = 0
+    metrics.latencyStats.sum = 0
+
+    metrics.httpStats.average = (metrics.httpStats.duration > 0 && metrics.httpStats.count > 0) ? (metrics.httpStats.duration / metrics.httpStats.count + metrics.latencyStats.average) : 0.0
     metrics.httpStats.count = 0;
     metrics.httpStats.duration = 0;
 
@@ -234,7 +246,9 @@ public class AutoScalar {
     }
     metrics.throughputStats.requestCount = 0
 
-    let metricsToSend = AverageMetrics(responseTime: metrics.httpStats.average,
+    let metricsToSend = AverageMetrics(
+      dispatchQueueLatency: metrics.latencyStats.average,
+      responseTime: metrics.httpStats.average,
       memory: metrics.memoryStats.average,
       cpu: metrics.cpuStats.average,
       throughput: metrics.throughputStats.throughput
@@ -289,6 +303,16 @@ public class AutoScalar {
           metricDict["desc"] = ""
           metricDict["timestamp"] = timestamp
           metricsArray.append(metricDict)
+        case "DispatchQueueLatency":
+          var metricDict = [String:Any]()
+          metricDict["category"] = "swift"
+          metricDict["group"] = "Web"
+          metricDict["name"] = "dispatchQueueLatency"
+          metricDict["value"] = Double(metricsToSend.dispatchQueueLatency)
+          metricDict["unit"] = "ms"
+          metricDict["desc"] = ""
+          metricDict["timestamp"] = timestamp
+          metricsArray.append(metricDict)
         default:
           break
       }
@@ -312,25 +336,17 @@ public class AutoScalar {
     let sendMetricsPath = "\(host):443/services/agent/report"
     Log.debug("[Auto-scaling Agent] Attempting to send metrics to \(sendMetricsPath)")
 
-    do {
-      let jsonData = try JSONSerialization.data(withJSONObject: asOBJ, options: .prettyPrinted)
-      let decoded = try JSONSerialization.jsonObject(with: jsonData, options: [])
-      if let dictFromJSON = decoded as? [String:Any] {
-        KituraRequest.request(.post,
-          sendMetricsPath,
-          parameters: dictFromJSON,
-          encoding: JSONEncoding.default,
-          headers: ["Content-Type":"application/json", "Authorization":"Basic \(authorization)"]
-        ).response {
-          request, response, data, error in
-            Log.debug("[Auto-scaling Agent] sendMetrics:Request: \(request!)")
-            Log.debug("[Auto-scaling Agent] sendMetrics:Response: \(response!)")
-            Log.debug("[Auto-scaling Agent] sendMetrics:Data: \(data!)")
-            Log.debug("[Auto-scaling Agent] sendMetrics:Error: \(error)")}
-        }
-    } catch {
-      Log.warning("[Auto-Scaling Agent] \(error.localizedDescription)")
-    }
+    KituraRequest.request(.post,
+      sendMetricsPath,
+      parameters: asOBJ,
+      encoding: JSONEncoding.default,
+      headers: ["Content-Type":"application/json", "Authorization":"Basic \(authorization)"]
+    ).response {
+      request, response, data, error in
+        Log.debug("[Auto-scaling Agent] sendMetrics:Request: \(request!)")
+        Log.debug("[Auto-scaling Agent] sendMetrics:Response: \(response!)")
+        Log.debug("[Auto-scaling Agent] sendMetrics:Data: \(data!)")
+        Log.debug("[Auto-scaling Agent] sendMetrics:Error: \(String(describing: error))")}
   }
 
   private func notifyStatus() {
@@ -343,8 +359,8 @@ public class AutoScalar {
       request, response, data, error in
         Log.debug("[Auto-scaling Agent] notifyStatus:Request: \(request!)")
         Log.debug("[Auto-scaling Agent] notifyStatus:Response: \(response!)")
-        Log.debug("[Auto-scaling Agent] notifyStatus:Data: \(data)")
-        Log.debug("[Auto-scaling Agent] notifyStatus:Error: \(error)")
+        Log.debug("[Auto-scaling Agent] notifyStatus:Data: \(String(describing: data))")
+        Log.debug("[Auto-scaling Agent] notifyStatus:Error: \(String(describing: error))")
     }
   }
 
@@ -360,9 +376,9 @@ public class AutoScalar {
       request, response, data, error in
         Log.debug("[Auto-scaling Agent] requestConfig:Request: \(request!)")
         Log.debug("[Auto-scaling Agent] requestConfig:Response: \(response!)")
-        Log.debug("[Auto-scaling Agent] requestConfig:Data: \(data!)")
-        Log.debug("[Auto-scaling Agent] requestConfig:Error: \(error)")
-        Log.debug("[Auto-scaling Agent] requestConfig:Body: \(String(data: data!, encoding: .utf8))")
+        Log.debug("[Auto-scaling Agent] requestConfig:Data: \(String(describing: data))")
+        Log.debug("[Auto-scaling Agent] requestConfig:Error: \(String(describing: error))")
+        Log.debug("[Auto-scaling Agent] requestConfig:Body: \(String(describing: data))")
         self.updateConfiguration(response: data!)
     }
   }
