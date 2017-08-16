@@ -22,7 +22,7 @@
  */
 
 #include "../monitoring/Typesdef.h"
-#include "AgentExtensions.h"
+#include "../../include/AgentExtensions.h"
 
 namespace ibmras {
 namespace common {

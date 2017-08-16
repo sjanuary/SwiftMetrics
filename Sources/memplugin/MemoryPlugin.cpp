@@ -20,7 +20,7 @@
  *      Author: Admin
  */
 
-#include "AgentExtensions.h"
+#include "../agentcore/include/AgentExtensions.h"
 #include "../agentcore/ibmras/monitoring/Typesdef.h"
 #include "MemoryPlugin.h"
 #include <cstring>
@@ -766,4 +766,3 @@ char* MemoryPlugin::NewCString(const std::string& s) {
 } //plugins
 } //monitoring
 } //ibmras
-

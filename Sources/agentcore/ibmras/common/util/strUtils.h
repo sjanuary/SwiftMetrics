@@ -11,7 +11,7 @@
 
 #include <string>
 #include <vector>
-#include "AgentExtensions.h"
+#include "../../../include/AgentExtensions.h"
 
 #ifndef STRUTILS_H_
 #define STRUTILS_H_

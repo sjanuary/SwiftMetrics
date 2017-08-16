@@ -1,3 +1,4 @@
+// swift-tools-version:4.0
 /**
 * Copyright IBM Corporation 2017
 *
@@ -17,50 +18,58 @@
 import PackageDescription
 
 #if os(Linux)
-   let excludePortDir = "Sources/agentcore/ibmras/common/port/osx"
+   let excludePortDir = "ibmras/common/port/osx"
 #else
-   let excludePortDir = "Sources/agentcore/ibmras/common/port/linux"
+   let excludePortDir = "ibmras/common/port/linux"
 #endif
 
 let package = Package(
   name: "SwiftMetrics",
-  targets: [
-      Target(name: "SwiftMetrics", dependencies: [.Target(name: "agentcore"),
-                                                   .Target(name: "cpuplugin"),
-                                                   .Target(name: "envplugin"),
-                                                   .Target(name: "memplugin"),
-                                                   .Target(name: "hcapiplugin")]),
-      Target(name: "SwiftMetricsKitura", dependencies: ["SwiftMetrics"]),
-      Target(name: "SwiftBAMDC", dependencies: ["SwiftMetricsKitura"]),
-      Target(name: "SwiftMetricsBluemix", dependencies: ["SwiftMetricsKitura","SwiftBAMDC"]),
-      Target(name: "SwiftMetricsDash", dependencies: ["SwiftMetricsBluemix"]),
-      Target(name: "mqttplugin", dependencies: [.Target(name: "paho"),
-                                                   .Target(name: "agentcore")]),
-      Target(name: "cpuplugin", dependencies: [.Target(name: "agentcore")]),
-      Target(name: "envplugin", dependencies: [.Target(name: "agentcore")]),
-      Target(name: "memplugin", dependencies: [.Target(name: "agentcore")]),
-      Target(name: "hcapiplugin", dependencies: [.Target(name: "agentcore")])
-   ],
+  products: [
+        // Products define the executables and libraries produced by a package, and make them visible to other packages.
+        .library(
+            name: "SwiftMetrics",
+            targets: ["SwiftMetrics", "SwiftMetricsKitura", "SwiftBAMDC", "SwiftMetricsBluemix", "SwiftMetricsDash"]),
+        .library(name: "agentcore", type: .dynamic, targets: ["agentcore"]),
+        .library(name: "hcapiplugin", type: .dynamic, targets: ["hcapiplugin"]),
+        .library(name: "memplugin", type: .dynamic, targets: ["memplugin"]),
+        .library(name: "cpuplugin", type: .dynamic, targets: ["cpuplugin"]),
+        .library(name: "envplugin", type: .dynamic, targets: ["envplugin"])
+    ],
   dependencies: [
-    .Package(url: "https://github.com/IBM-Swift/Kitura.git", majorVersion: 1, minor: 6),
-    .Package(url: "https://github.com/IBM-Swift/Kitura-WebSocket.git", majorVersion: 0, minor: 7),
-    .Package(url: "https://github.com/IBM-Swift/Kitura-Request.git", majorVersion: 0, minor: 7),
-    .Package(url: "https://github.com/IBM-Swift/CloudConfiguration.git", majorVersion: 1)
+    .package(url: "https://github.com/IBM-Swift/Kitura.git", from: "1.7.0"),
+    .package(url: "https://github.com/IBM-Swift/Kitura-WebSocket.git", from: "0.8.0"),
+    .package(url: "https://github.com/IBM-Swift/Kitura-Request.git", from: "0.8.0"),
+    .package(url: "https://github.com/IBM-Swift/CloudConfiguration.git", from: "2.0.0")
   ],
-   exclude: [ "Sources/agentcore/ibmras/common/port/aix",
-              "Sources/agentcore/ibmras/common/port/windows",
-              "Sources/agentcore/ibmras/common/data",
-              "Sources/agentcore/ibmras/common/util/memUtils.cpp",
-              "Sources/ostreamplugin",
-              "Sources/paho/Windows Build",
-              "Sources/paho/build",
-              "Sources/paho/doc",
-              "Sources/paho/test",
-              "Sources/paho/src/MQTTClient.c",
-              "Sources/paho/src/MQTTVersion.c",
-              "Sources/paho/src/SSLSocket.c",
-              "Sources/paho/src/samples",
-              excludePortDir
+  targets: [
+      .target(name: "agentcore",
+          exclude: [ "ibmras/common/port/aix",
+                     "ibmras/common/port/windows",
+                     "ibmras/common/data",
+                     "ibmras/common/util/memUtils.cpp",
+                     excludePortDir
+      ]),
+      .target(name: "paho",
+          exclude: [ "Windows Build",
+              "build",
+              "doc",
+              "test",
+              "src/MQTTClient.c",
+              "src/MQTTVersion.c",
+              "src/SSLSocket.c",
+              "src/samples",
+      ]),
+      .target(name: "SwiftMetrics", dependencies: ["agentcore", "CloudConfiguration"]),
+      .target(name: "SwiftMetricsKitura", dependencies: ["SwiftMetrics", "Kitura"]),
+      .target(name: "SwiftBAMDC", dependencies: ["SwiftMetricsKitura", "KituraRequest", "Kitura-WebSocket"]),
+      .target(name: "SwiftMetricsBluemix", dependencies: ["SwiftMetricsKitura","SwiftBAMDC"]),
+      .target(name: "SwiftMetricsDash", dependencies: ["SwiftMetricsBluemix"]),
+      .target(name: "mqttplugin", dependencies: ["paho", "agentcore"]),
+      .target(name: "cpuplugin"),
+      .target(name: "envplugin"),
+      .target(name: "memplugin"),
+      .target(name: "hcapiplugin"),
+      .testTarget(name: "SwiftMetricsTests", dependencies: ["SwiftMetrics", "agentcore"])
    ]
 )
-

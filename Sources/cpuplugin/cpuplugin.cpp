@@ -14,7 +14,7 @@
  * limitations under the License.
  *******************************************************************************/
 
-#include "AgentExtensions.h"
+#include "../agentcore/include/AgentExtensions.h"
 #include "../agentcore/ibmras/monitoring/Typesdef.h"
 #include "cpuplugin.h"
 #include <cstdio>

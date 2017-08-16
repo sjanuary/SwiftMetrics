@@ -20,7 +20,7 @@
  *      Author: Admin
  */
 
-#include "AgentExtensions.h"
+#include "../../agentcore/include/AgentExtensions.h"
 #include "../../agentcore/ibmras/monitoring/Typesdef.h"
 #include <string>
 

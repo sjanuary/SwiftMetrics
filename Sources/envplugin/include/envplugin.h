@@ -23,7 +23,7 @@
 #ifndef ibmras_monitoring_plugins_common_environment_envplugin_h
 #define ibmras_monitoring_plugins_common_environment_envplugin_h
 
-#include "AgentExtensions.h"
+#include "../../agentcore/include/AgentExtensions.h"
 #include "../../agentcore/ibmras/monitoring/Typesdef.h"
 #include <string>
 
@@ -37,7 +37,7 @@ class EnvPlugin {
 public:
 	static agentCoreFunctions aCF;
 
-    std::string arch; 
+    std::string arch;
 	std::string osName;
 	std::string osVersion;
 	std::string nprocs;

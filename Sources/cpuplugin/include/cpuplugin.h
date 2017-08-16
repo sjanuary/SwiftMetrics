@@ -23,7 +23,7 @@
 #ifndef CPUPLUGIN_H_
 #define CPUPLUGIN_H_
 
-#include "AgentExtensions.h"
+#include "../../agentcore/include/AgentExtensions.h"
 #include "../../agentcore/ibmras/monitoring/Typesdef.h"
 #include <string>
 
