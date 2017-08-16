@@ -29,6 +29,7 @@ let package = Package(
         // Products define the executables and libraries produced by a package, and make them visible to other packages.
         .library(
             name: "SwiftMetrics",
+            type: .dynamic,
             targets: ["SwiftMetrics",
                 "SwiftMetricsKitura",
                 "SwiftBAMDC",
@@ -38,7 +39,7 @@ let package = Package(
                  "hcapiplugin",
                  "memplugin",
                  "cpuplugin",
-                 "envplugin"])
+                 "envplugin"]),
     ],
   dependencies: [
     .package(url: "https://github.com/IBM-Swift/Kitura.git", from: "1.7.0"),
