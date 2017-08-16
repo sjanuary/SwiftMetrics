@@ -29,7 +29,7 @@ let package = Package(
         // Products define the executables and libraries produced by a package, and make them visible to other packages.
         .library(
             name: "SwiftMetrics",
-            targets: ["SwiftMetrics", "SwiftMetricsKitura", "SwiftBAMDC", "SwiftMetricsBluemix", "SwiftMetricsDash"]),
+            targets: ["SwiftMetrics", "SwiftMetricsKitura", "SwiftBAMDC", "SwiftMetricsBluemix", "SwiftMetricsDash", "agentcore"]),
         .library(name: "agentcore", type: .dynamic, targets: ["agentcore"]),
         .library(name: "hcapiplugin", type: .dynamic, targets: ["hcapiplugin"]),
         .library(name: "memplugin", type: .dynamic, targets: ["memplugin"]),
