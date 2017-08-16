@@ -29,17 +29,18 @@ let package = Package(
         // Products define the executables and libraries produced by a package, and make them visible to other packages.
         .library(
             name: "SwiftMetrics",
-            type: .dynamic,
             targets: ["SwiftMetrics",
                 "SwiftMetricsKitura",
                 "SwiftBAMDC",
                 "SwiftMetricsBluemix",
-                "SwiftMetricsDash",
-                "agentcore",
-                 "hcapiplugin",
-                 "memplugin",
-                 "cpuplugin",
-                 "envplugin"]),
+                "SwiftMetricsDash"]),
+
+        .executable(name: "SwiftMetricsCommonSample", targets: ["SwiftMetricsCommonSample"]),
+        .library(name: "agentcore", type: .dynamic, targets: ["agentcore"]),
+        .library(name: "hcapiplugin", type: .dynamic, targets: ["hcapiplugin"]),
+        .library(name: "memplugin", type: .dynamic, targets: ["memplugin"]),
+        .library(name: "cpuplugin", type: .dynamic, targets: ["cpuplugin"]),
+        .library(name: "envplugin", type: .dynamic, targets: ["envplugin"])
     ],
   dependencies: [
     .package(url: "https://github.com/IBM-Swift/Kitura.git", from: "1.7.0"),
@@ -70,6 +71,8 @@ let package = Package(
       .target(name: "SwiftBAMDC", dependencies: ["SwiftMetricsKitura", "KituraRequest", "Kitura-WebSocket"]),
       .target(name: "SwiftMetricsBluemix", dependencies: ["SwiftMetricsKitura","SwiftBAMDC"]),
       .target(name: "SwiftMetricsDash", dependencies: ["SwiftMetricsBluemix"]),
+      .target(name: "SwiftMetricsCommonSample", dependencies: ["SwiftMetrics", "agentcore", "hcapiplugin", "envplugin", "cpuplugin", "memplugin"],
+            path: "commonSample/Sources"),
       .target(name: "mqttplugin", dependencies: ["paho", "agentcore"]),
       .target(name: "cpuplugin"),
       .target(name: "envplugin"),
