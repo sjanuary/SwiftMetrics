@@ -32,14 +32,13 @@ let package = Package(
         .executable(name: "SwiftMetricsCommonSample", targets: ["SwiftMetricsCommonSample"]),
     ],
   dependencies: [
-    .package(url: "../SwiftMetricsCore", from: "0.0.0"),
+    .package(url: "../omr-agentcore", from: "3.0.0"),
     .package(url: "https://github.com/IBM-Swift/Kitura.git", from: "1.7.0"),
     .package(url: "https://github.com/IBM-Swift/Kitura-WebSocket.git", from: "0.8.0"),
     .package(url: "https://github.com/IBM-Swift/Kitura-Request.git", from: "0.8.0"),
     .package(url: "https://github.com/IBM-Swift/CloudConfiguration.git", from: "2.0.0")
   ],
   targets: [
-
       .target(name: "SwiftMetrics", dependencies: ["agentcore", "hcapiplugin", "envplugin", "cpuplugin", "memplugin", "CloudConfiguration"]),
       .target(name: "SwiftMetricsKitura", dependencies: ["SwiftMetrics", "Kitura"]),
       .target(name: "SwiftBAMDC", dependencies: ["SwiftMetricsKitura", "KituraRequest", "Kitura-WebSocket"]),
