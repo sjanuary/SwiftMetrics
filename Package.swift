@@ -32,7 +32,7 @@ let package = Package(
         .executable(name: "SwiftMetricsCommonSample", targets: ["SwiftMetricsCommonSample"]),
     ],
   dependencies: [
-    .package(url: "https://github.com/sjanuary/omr-agentcore", .branch("swiftlayout")),
+    .package(url: "https://github.com/RuntimeTools/omr-agentcore", .exact("3.2.3-swift4")),
     .package(url: "https://github.com/IBM-Swift/Kitura.git", from: "1.7.0"),
     .package(url: "https://github.com/IBM-Swift/Kitura-WebSocket.git", from: "0.8.0"),
     .package(url: "https://github.com/IBM-Swift/Kitura-Request.git", from: "0.8.0"),
