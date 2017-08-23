@@ -20,7 +20,6 @@ import PackageDescription
 let package = Package(
   name: "SwiftMetrics",
   products: [
-        // Products define the executables and libraries produced by a package, and make them visible to other packages.
         .library(
             name: "SwiftMetrics",
             targets: ["SwiftMetrics",
@@ -29,10 +28,11 @@ let package = Package(
                 "SwiftMetricsBluemix",
                 "SwiftMetricsDash"]),
 
+        .executable(name: "SwiftMetricsEmitSample", targets: ["SwiftMetricsEmitSample"]),
         .executable(name: "SwiftMetricsCommonSample", targets: ["SwiftMetricsCommonSample"]),
     ],
   dependencies: [
-    .package(url: "../SwiftMetricsCore", from: "0.0.0"),
+    .package(url: "https://github.com/sjanuary/omr-agentcore", .branch("swiftlayout")),
     .package(url: "https://github.com/IBM-Swift/Kitura.git", from: "1.7.0"),
     .package(url: "https://github.com/IBM-Swift/Kitura-WebSocket.git", from: "0.8.0"),
     .package(url: "https://github.com/IBM-Swift/Kitura-Request.git", from: "0.8.0"),
@@ -46,6 +46,8 @@ let package = Package(
       .target(name: "SwiftMetricsDash", dependencies: ["SwiftMetricsBluemix"]),
       .target(name: "SwiftMetricsCommonSample", dependencies: ["SwiftMetrics"],
             path: "commonSample/Sources"),
+      .target(name: "SwiftMetricsEmitSample", dependencies: ["SwiftMetrics"],
+            path: "emitSample/Sources"),
       .testTarget(name: "SwiftMetricsTests", dependencies: ["SwiftMetrics"])
    ]
 )
