@@ -533,6 +533,7 @@ public class BMConfig : IBAMConfig {
 
         do {
             let jsonData = try JSONSerialization.data(withJSONObject: apmData, options: .prettyPrinted)
+  
 
                 /*let key = "X-TransactionId"
                 var headerCopy = headers
@@ -556,8 +557,9 @@ public class BMConfig : IBAMConfig {
                 request.response(completionHandler: { (data, response, error) in
                  
                     if let e = error {
+                        let dataString = String(data: jsonData, encoding: .utf8)!
                         //client side error
-                        Log.error("[SwiftMetricsBAMConfig] Failed to create connection to \(urlString): " + e.localizedDescription)
+                        Log.error("[SwiftMetricsBAMConfig] Failed to create connection to \(urlString): " + e.localizedDescription + " data: \(dataString)")
                     }
                     else if let httpResponse = response, let receivedData = data {
                         
