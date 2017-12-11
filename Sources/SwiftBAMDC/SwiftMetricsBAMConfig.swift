@@ -416,7 +416,7 @@ public class BMConfig : IBAMConfig {
 
             //URLEscape tenantId since can be set via env var
 
-            self.getBAMURLs(authorization: " ")
+            self.getBAMURLs(authorization: "Basic ")
 
             self.backendReady  = true
 
@@ -448,7 +448,11 @@ public class BMConfig : IBAMConfig {
         let tId = self.tenantId.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
         let me  = "&tenant=" + tId + "&origin=" + self.dcId
 
-        self.ingressHeaders["Authorization"] = authorization + self.ingressToken
+        if(authorization == "Basic ") { 
+            self.ingressHeaders["Authorization"] = self.ingressToken 
+        } else {
+          self.ingressHeaders["Authorization"] = authorization + self.ingressToken
+        }
         self.ingressHeaders["X-TenantId"] = self.tenantId
         self.ingressHeaders["BM-ApplicationId"] = self.appId
 
