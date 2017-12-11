@@ -416,7 +416,7 @@ public class BMConfig : IBAMConfig {
 
             //URLEscape tenantId since can be set via env var
 
-            self.getBAMURLs(authorization: "Basic ")
+            self.getBAMURLs(authorization: " ")
 
             self.backendReady  = true
 
