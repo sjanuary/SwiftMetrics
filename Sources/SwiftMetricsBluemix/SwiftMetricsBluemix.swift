@@ -116,11 +116,11 @@ public class SwiftMetricsBluemix {
   public init(metricsToEnable: [String], swiftMetricsInstance: SwiftMetrics) {
 
     self.SM = swiftMetricsInstance
-    do {
-       try self.detectBAMBinding(swiftMetricsInstance: self.SM)
-    } catch {
-        Log.error("[SwiftMetricsBluemix] exception thrown in detectBAMBinding")
-    }
+    //do {
+    //   try self.detectBAMBinding(swiftMetricsInstance: self.SM)
+    //} catch {
+    //    Log.error("[SwiftMetricsBluemix] exception thrown in detectBAMBinding")
+    //}
 
     Log.entry("[SwiftMetricsBluemix] initialization(\(metricsToEnable))")
     enabledMetrics = metricsToEnable
