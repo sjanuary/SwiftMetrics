@@ -191,7 +191,7 @@ public class SwiftMetricsBluemix {
     self.agentPassword = agentPassword
     self.agentUsername = agentUsername
 
-    Log.debug("[Auto-Scaling Agent] Found Auto-Scaling service: \(scalingServ.name)")
+    Log.info("[Auto-Scaling Agent] Found Auto-Scaling service: \(scalingServ.name)")
 
     guard let app = configMgr.getApp() else {
       Log.error("[Auto-Scaling Agent] Could not get Cloud Foundry app metadata.")
@@ -204,14 +204,14 @@ public class SwiftMetricsBluemix {
     instanceId = app.instanceId
 
     auth = "\(agentUsername):\(agentPassword)"
-    Log.debug("[Auto-scaling Agent] Authorisation: \(auth)")
+    Log.info("[Auto-scaling Agent] Authorisation: \(auth)")
     authorization = Data(auth.utf8).base64EncodedString()
 
     return true
   }
 
   private func snoozeStartReport() {
-    Log.debug("[Auto-Scaling Agent] waiting to startReport() for \(reportInterval) seconds...")
+    Log.info("[Auto-Scaling Agent] waiting to startReport() for \(reportInterval) seconds...")
     sleep(UInt32(reportInterval))
     self.startReport()
     DispatchQueue.global(qos: .background).async {
@@ -220,7 +220,7 @@ public class SwiftMetricsBluemix {
   }
 
   private func snoozeRefreshConfig() {
-    Log.debug("[Auto-Scaling Agent] waiting to refreshConfig() for \(configRefreshInterval) seconds...")
+    Log.info("[Auto-Scaling Agent] waiting to refreshConfig() for \(configRefreshInterval) seconds...")
     sleep(UInt32(configRefreshInterval))
     self.refreshConfig()
     DispatchQueue.global(qos: .background).async {
@@ -237,7 +237,7 @@ public class SwiftMetricsBluemix {
     monitor.on({(mem: MemData) -> () in
       self.metrics.memoryStats.count += 1
       let memValue = Float(mem.applicationRAMUsed)
-      Log.debug("[Auto-scaling Agent] Memory value received \(memValue) bytes")
+      Log.info("[Auto-scaling Agent] Memory value received \(memValue) bytes")
       self.metrics.memoryStats.sum += memValue
     })
     monitor.on({(cpu: CPUData) -> () in
@@ -247,7 +247,7 @@ public class SwiftMetricsBluemix {
     monitor.on({(http: HTTPData) -> () in
       self.metrics.httpStats.count += 1
       self.metrics.httpStats.duration += http.duration;
-      Log.debug("[Auto-scaling Agent] Http response time received \(http.duration) ")
+      Log.info("[Auto-scaling Agent] Http response time received \(http.duration) ")
       self.metrics.throughputStats.requestCount += 1;
     })
     monitor.on({(latency: LatencyData) -> () in
@@ -386,7 +386,7 @@ public class SwiftMetricsBluemix {
 
   private func sendMetrics(asOBJ : [String:Any]) {
     let sendMetricsPath = "\(host):443/services/agent/report"
-    Log.debug("[Auto-scaling Agent] Attempting to send metrics to \(sendMetricsPath)")
+    Log.info("[Auto-scaling Agent] Attempting to send metrics to \(sendMetricsPath)")
 
     
     let request = RestRequest(method: .post, url: sendMetricsPath)
@@ -397,25 +397,25 @@ public class SwiftMetricsBluemix {
             print("Error converting input to JSON object to post.")
     }
     request.response { (data, response, error) in
-        Log.debug("[Auto-scaling Agent] sendMetrics:Request: \(String(describing:request))")
-        Log.debug("[Auto-scaling Agent] sendMetrics:Response: \(String(describing:response))")
-        Log.debug("[Auto-scaling Agent] sendMetrics:Data: \(String(describing:data))")
-        Log.debug("[Auto-scaling Agent] sendMetrics:Error: \(String(describing: error))")
+        Log.info("[Auto-scaling Agent] sendMetrics:Request: \(String(describing:request))")
+        Log.info("[Auto-scaling Agent] sendMetrics:Response: \(String(describing:response))")
+        Log.info("[Auto-scaling Agent] sendMetrics:Data: \(String(describing:data))")
+        Log.info("[Auto-scaling Agent] sendMetrics:Error: \(String(describing: error))")
     }
     
   }
 
   private func notifyStatus() {
     let notifyStatusPath = "\(host):443/services/agent/status/\(appID)"
-    Log.debug("[Auto-scaling Agent] Attempting notifyStatus request to \(notifyStatusPath)")
+    Log.info("[Auto-scaling Agent] Attempting notifyStatus request to \(notifyStatusPath)")
     
     let request = RestRequest(method: .put, url: notifyStatusPath)
     request.headerParameters = ["Authorization":"Basic \(authorization)"]
     request.response { (data, response, error) in
-        Log.debug("[Auto-scaling Agent] notifyStatus:Request: \(String(describing:request))")
-        Log.debug("[Auto-scaling Agent] notifyStatus:Response: \(String(describing:response))")
-        Log.debug("[Auto-scaling Agent] notifyStatus:Data: \(String(describing: data))")
-        Log.debug("[Auto-scaling Agent] notifyStatus:Error: \(String(describing: error))")
+        Log.info("[Auto-scaling Agent] notifyStatus:Request: \(String(describing:request))")
+        Log.info("[Auto-scaling Agent] notifyStatus:Response: \(String(describing:response))")
+        Log.info("[Auto-scaling Agent] notifyStatus:Data: \(String(describing: data))")
+        Log.info("[Auto-scaling Agent] notifyStatus:Error: \(String(describing: error))")
     }
     
   }
@@ -424,16 +424,16 @@ public class SwiftMetricsBluemix {
   // Read the config from the autoscaling service to see if any changes have been made
   private func refreshConfig() {
     let refreshConfigPath = "\(host):443/v1/agent/config/\(serviceID)/\(appID)?appType=swift"
-    Log.debug("[Auto-scaling Agent] Attempting requestConfig request to \(refreshConfigPath)")
+    Log.info("[Auto-scaling Agent] Attempting requestConfig request to \(refreshConfigPath)")
 
     let request = RestRequest(method: .get, url: refreshConfigPath)
     request.headerParameters = ["Content-Type":"application/json", "Authorization":"Basic \(authorization)"]
     request.response { (data, response, error) in
-        Log.debug("[Auto-scaling Agent] requestConfig:Request: \(String(describing:request))")
-        Log.debug("[Auto-scaling Agent] requestConfig:Response: \(String(describing:response))")
-        Log.debug("[Auto-scaling Agent] requestConfig:Data: \(String(describing: data))")
-        Log.debug("[Auto-scaling Agent] requestConfig:Error: \(String(describing: error))")
-        Log.debug("[Auto-scaling Agent] requestConfig:Body: \(String(describing: data))")
+        Log.info("[Auto-scaling Agent] requestConfig:Request: \(String(describing:request))")
+        Log.info("[Auto-scaling Agent] requestConfig:Response: \(String(describing:response))")
+        Log.info("[Auto-scaling Agent] requestConfig:Data: \(String(describing: data))")
+        Log.info("[Auto-scaling Agent] requestConfig:Error: \(String(describing: error))")
+        Log.info("[Auto-scaling Agent] requestConfig:Body: \(String(describing: data))")
         if let responseData = data {
             self.updateConfiguration(response: responseData)
         } else {
@@ -446,7 +446,7 @@ public class SwiftMetricsBluemix {
   // Update local config from autoscaling service
   private func updateConfiguration(response: Data) {
     let jsonData = JSON(data: response)
-    Log.debug("[Auto-scaling Agent] attempting to update configuration with \(jsonData)")
+    Log.info("[Auto-scaling Agent] attempting to update configuration with \(jsonData)")
     if (jsonData == nil) {
       isAgentEnabled = false
       return
