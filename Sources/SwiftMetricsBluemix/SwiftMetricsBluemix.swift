@@ -122,7 +122,7 @@ public class SwiftMetricsBluemix {
     //    Log.error("[SwiftMetricsBluemix] exception thrown in detectBAMBinding")
     //}
 
-    Log.entry("[SwiftMetricsBluemix] initialization(\(metricsToEnable))")
+    Log.info("[SwiftMetricsBluemix] initialization(\(metricsToEnable))")
     enabledMetrics = metricsToEnable
 
     if !self.initCredentials() {
@@ -166,6 +166,7 @@ public class SwiftMetricsBluemix {
   }
 
   private func initCredentials() -> Bool {
+    Log.info("[SwiftMetricsBluemix] initCredentials")
     let configMgr = ConfigurationManager().load(.environmentVariables)
     // Find auto-scaling service using convenience method
     guard let scalingServ: Service = configMgr.getServices(type: autoScalingServiceLabel).first else {
