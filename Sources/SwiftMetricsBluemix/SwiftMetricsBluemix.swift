@@ -228,7 +228,8 @@ public class SwiftMetricsBluemix {
     }
   }
 
-  public convenience init(swiftMetricsInstance: SwiftMetrics) {
+  public convenience init(swiftMetricsInstance: SwiftMetrics) {    
+    Log.error("[SwiftMetricsBluemix] init")
     self.init(metricsToEnable: ["CPU", "Memory", "Throughput", "ResponseTime", "DispatchQueueLatency"], swiftMetricsInstance: swiftMetricsInstance)
   }
 
